@@ -1,0 +1,453 @@
+<!-- ===================== gemeinsame Hilfsfunktionen für die Dialoge / shared editor helpers =====================
+     Texte: locales/<sprache>/easye4.json, Hilfe: locales/<sprache>/easye4.html (de, en-US) -->
+<script type="text/javascript">
+    (function () {
+        var STD = /^(MB|MW|MD|NB|NW|ND|QA|IA|ID|M|N|I|Q)$/;
+        // kleinster beschreibbarer Index (I1-I16, IA1-IA4, ID1-ID25 sind reserviert)
+        var MIN_WRITE = { I: 17, IA: 5, ID: 26 };
+
+        function dialogType() {
+            return $("#node-input-operandType").length ? $("#node-input-operandType").val() : undefined;
+        }
+        function minIndex(type, isOut) {
+            return isOut && MIN_WRITE[type] ? MIN_WRITE[type] : 1;
+        }
+        window.easyE4Editor = {
+            STD: STD,
+            // Text für Knotenbeschriftung
+            operandText: function (n, emptyText) {
+                var t = n.operandType;
+                if (t === undefined) return n.operand || emptyText;
+                if (t === "all" || t === "msg" || t === "") return emptyText;
+                if (t === "alias") return n.operandAlias || "Alias?";
+                return t + (n.operandIndex || "?");
+            },
+            // Validatoren (im geöffneten Dialog gilt der aktuelle Feldinhalt, sonst der gespeicherte Knoten)
+            indexValidator: function (isOut) {
+                return function (v) {
+                    var t = dialogType();
+                    if (t === undefined) t = this.operandType;
+                    if (!t || !STD.test(t)) return true;
+                    var s = String(v === undefined || v === null ? "" : v).trim();
+                    return /^\d+$/.test(s) && parseInt(s, 10) >= minIndex(t, isOut);
+                };
+            },
+            aliasValidator: function (v) {
+                var t = dialogType();
+                if (t === undefined) t = this.operandType;
+                if (t !== "alias") return true;
+                return /^[A-Za-z0-9_]{1,32}$/.test(String(v || "").trim());
+            },
+            // Dialog vorbereiten: ältere Flows (nur Textfeld "operand") werden in Typ + Index umgesetzt
+            prepareOperand: function (node, isOut) {
+                var $type = $("#node-input-operandType"), $idx = $("#node-input-operandIndex"),
+                    $alias = $("#node-input-operandAlias");
+                if (node.operandType === undefined) {
+                    var legacy = String(node.operand || "").trim();
+                    var m = /^(MB|MW|MD|NB|NW|ND|QA|IA|ID|M|N|I|Q)0*(\d+)$/i.exec(legacy);
+                    if (!legacy) { $type.val(isOut ? "msg" : "all"); }
+                    else if (m && $type.find("option[value='" + m[1].toUpperCase() + "']").length) {
+                        $type.val(m[1].toUpperCase()); $idx.val(parseInt(m[2], 10));
+                    } else { $type.val("alias"); $alias.val(legacy); }
+                }
+                function update() {
+                    var t = $type.val();
+                    var std = STD.test(t || "");
+                    $(".e4-index-row").toggle(std);
+                    $(".e4-alias-row").toggle(t === "alias");
+                    $(".e4-diag-row").toggle(t === "all");
+                    var min = minIndex(t, isOut);
+                    $idx.attr("min", min);
+                    $(".e4-hint").text(isOut && min > 1 ? node._("easye4.label.writableFrom", { min: min }) : "");
+                    // verstecktes Feld: Operandenname für ältere Laufzeit und Anzeige
+                    var name = "";
+                    if (std) name = t + ($idx.val() || "");
+                    else if (t === "alias") name = String($alias.val() || "").trim();
+                    $("#node-input-operand").val(name);
+                    $idx.trigger("validate"); $alias.trigger("validate");
+                }
+                $type.on("change", update);
+                $idx.on("input change", update);
+                $alias.on("input change", update);
+                update();
+            },
+            saveOperand: function () {
+                var t = $("#node-input-operandType").val();
+                var std = STD.test(t || "");
+                var name = "";
+                if (std) name = t + ($("#node-input-operandIndex").val() || "");
+                else if (t === "alias") name = String($("#node-input-operandAlias").val() || "").trim();
+                $("#node-input-operand").val(name);
+            },
+        };
+    })();
+</script>
+
+<!-- ===================== Steuerung (Konfiguration) ===================== -->
+<script type="text/javascript">
+    (function () {
+        function topicValid(v) {
+            return !v || (v.length <= 511 && !/[#+]/.test(v));
+        }
+        function baseValid(v) {
+            var mode = $("#node-config-input-topicMode").length ? $("#node-config-input-topicMode").val() : this.topicMode;
+            if (mode !== "auto") return true;
+            v = String(v || "").trim();
+            return v.length > 0 && v.length <= 480 && !/[#+]/.test(v);
+        }
+        RED.nodes.registerType("easye4-device", {
+            category: "config",
+            defaults: {
+                name: { value: "easyE4" },
+                broker: { type: "mqtt-broker", required: true },
+                topicMode: { value: "auto" },
+                baseTopic: { value: "easye4/1", validate: baseValid },
+                dataIn: { value: "", validate: topicValid },
+                dataOut: { value: "", validate: topicValid },
+                actionOut: { value: "", validate: topicValid },
+                actionIn: { value: "", validate: topicValid },
+                qos: { value: "0" },
+            },
+            label: function () {
+                return this.name || "easyE4";
+            },
+            paletteLabel: "easyE4",
+            oneditprepare: function () {
+                var node = this;
+                if (node.topicMode === undefined) $("#node-config-input-topicMode").val("manual"); // ältere Flows
+                function base() { return String($("#node-config-input-baseTopic").val() || "").replace(/\/+$/, ""); }
+                function update() {
+                    var auto = $("#node-config-input-topicMode").val() === "auto";
+                    $(".e4-auto").toggle(auto);
+                    $(".e4-manual").toggle(!auto);
+                    var b = base();
+                    var rows = auto
+                        ? [["data", b + "/data"], ["set", b + "/set"], ["actions/request", b + "/actions/request"], ["actions/response", b + "/actions/response"]]
+                        : null;
+                    var t = [
+                        ["Publish topic", auto ? b + "/data" : $("#node-config-input-dataIn").val()],
+                        ["Subscribe topic", auto ? b + "/set" : $("#node-config-input-dataOut").val()],
+                        ["Actions publish topic", auto ? b + "/actions/response" : $("#node-config-input-actionIn").val()],
+                        ["Actions subscribe topic", auto ? b + "/actions/request" : $("#node-config-input-actionOut").val()],
+                    ];
+                    var html = "";
+                    t.forEach(function (r) {
+                        var v = $("<div>").text(r[1] || node._("easye4.label.empty")).html();
+                        html += "<tr><td style='padding-right:12px'>" + r[0] + "</td><td><code>" + v + "</code></td></tr>";
+                    });
+                    $("#e4-summary").html(html);
+                    $("#node-config-input-baseTopic").trigger("validate");
+                }
+                $("#node-config-input-topicMode").on("change", update);
+                $("#node-config-dialog-ok, #node-config-input-baseTopic, .e4-manual input").on("input change", update);
+                update();
+            },
+        });
+    })();
+</script>
+
+<script type="text/html" data-template-name="easye4-device">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-config-input-name" placeholder="easyE4" />
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-broker"><i class="fa fa-globe"></i> <span data-i18n="easye4.label.broker"></span></label>
+        <input type="text" id="node-config-input-broker" />
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-topicMode"><i class="fa fa-sitemap"></i> <span data-i18n="easye4.label.topics"></span></label>
+        <select id="node-config-input-topicMode">
+            <option value="auto" data-i18n="easye4.topicMode.auto"></option>
+            <option value="manual" data-i18n="easye4.topicMode.manual"></option>
+        </select>
+    </div>
+
+    <div class="form-row e4-auto">
+        <label for="node-config-input-baseTopic"><i class="fa fa-folder-open"></i> <span data-i18n="easye4.label.baseTopic"></span></label>
+        <input type="text" id="node-config-input-baseTopic" placeholder="easye4/1" />
+    </div>
+
+    <div class="e4-manual">
+        <div class="form-row">
+            <label for="node-config-input-dataIn"><i class="fa fa-download"></i> <span data-i18n="easye4.label.dataIn"></span></label>
+            <input type="text" id="node-config-input-dataIn" data-i18n="[placeholder]easye4.placeholder.dataIn" />
+        </div>
+        <div class="form-row">
+            <label for="node-config-input-dataOut"><i class="fa fa-upload"></i> <span data-i18n="easye4.label.dataOut"></span></label>
+            <input type="text" id="node-config-input-dataOut" data-i18n="[placeholder]easye4.placeholder.dataOut" />
+        </div>
+        <div class="form-row">
+            <label for="node-config-input-actionIn"><i class="fa fa-download"></i> <span data-i18n="easye4.label.actionIn"></span></label>
+            <input type="text" id="node-config-input-actionIn" data-i18n="[placeholder]easye4.placeholder.actionIn" />
+        </div>
+        <div class="form-row">
+            <label for="node-config-input-actionOut"><i class="fa fa-upload"></i> <span data-i18n="easye4.label.actionOut"></span></label>
+            <input type="text" id="node-config-input-actionOut" data-i18n="[placeholder]easye4.placeholder.actionOut" />
+        </div>
+    </div>
+
+    <div class="form-row">
+        <label for="node-config-input-qos"><i class="fa fa-empire"></i> QoS</label>
+        <select id="node-config-input-qos" style="width:70px">
+            <option value="0">0</option>
+            <option value="1">1</option>
+        </select>
+        <span style="margin-left:8px; color:#888" data-i18n="easye4.label.qosHint"></span>
+    </div>
+
+    <div class="form-tips">
+        <span data-i18n="[html]easye4.tips.summary"></span>
+        <table id="e4-summary" style="margin-top:6px"></table>
+        <div style="margin-top:6px" data-i18n="easye4.tips.qos"></div>
+    </div>
+</script>
+
+
+<!-- ===================== easyE4 lesen ===================== -->
+<script type="text/javascript">
+    (function () {
+        RED.nodes.registerType("easye4-in", {
+            category: "easyE4",
+            color: "#8fc1e3",
+            defaults: {
+                name: { value: "" },
+                device: { type: "easye4-device", required: true },
+                operandType: { value: "all" },
+                operandIndex: { value: 1, validate: easyE4Editor.indexValidator(false) },
+                operandAlias: { value: "", validate: easyE4Editor.aliasValidator },
+                operand: { value: "" },
+                onlyChange: { value: false },
+                showDiag: { value: false },
+            },
+            inputs: 0,
+            outputs: 1,
+            icon: "font-awesome/fa-sign-in",
+            label: function () {
+                return this.name || this._("easye4.in.label") + ": " + easyE4Editor.operandText(this, this._("easye4.label.allOperands"));
+            },
+            paletteLabel: function () { return this._("easye4.in.paletteLabel"); },
+            outputLabels: function () { return this._("easye4.in.output"); },
+            oneditprepare: function () { easyE4Editor.prepareOperand(this, false); },
+            oneditsave: function () { easyE4Editor.saveOperand(); },
+        });
+    })();
+</script>
+
+<script type="text/html" data-template-name="easye4-in">
+    <div class="form-row">
+        <label for="node-input-device"><i class="fa fa-microchip"></i> <span data-i18n="easye4.label.device"></span></label>
+        <input type="text" id="node-input-device" />
+    </div>
+    <div class="form-row">
+        <label for="node-input-operandType"><i class="fa fa-crosshairs"></i> <span data-i18n="easye4.label.operand"></span></label>
+        <select id="node-input-operandType" style="width:60%">
+            <option value="all" data-i18n="easye4.op.all"></option>
+            <option value="M" data-i18n="easye4.op.M"></option>
+            <option value="MB" data-i18n="easye4.op.MB"></option>
+            <option value="MW" data-i18n="easye4.op.MW"></option>
+            <option value="MD" data-i18n="easye4.op.MD"></option>
+            <option value="N" data-i18n="easye4.op.N"></option>
+            <option value="NB" data-i18n="easye4.op.NB"></option>
+            <option value="NW" data-i18n="easye4.op.NW"></option>
+            <option value="ND" data-i18n="easye4.op.ND"></option>
+            <option value="I" data-i18n="easye4.op.I"></option>
+            <option value="IA" data-i18n="easye4.op.IA"></option>
+            <option value="ID" data-i18n="easye4.op.ID"></option>
+            <option value="Q" data-i18n="easye4.op.Q"></option>
+            <option value="QA" data-i18n="easye4.op.QA"></option>
+            <option value="alias" data-i18n="easye4.op.alias"></option>
+        </select>
+    </div>
+    <div class="form-row e4-index-row">
+        <label for="node-input-operandIndex"><i class="fa fa-hashtag"></i> <span data-i18n="easye4.label.index"></span></label>
+        <input type="number" id="node-input-operandIndex" min="1" step="1" style="width:90px" />
+        <span class="e4-hint" style="margin-left:8px; color:#888"></span>
+    </div>
+    <div class="form-row e4-alias-row">
+        <label for="node-input-operandAlias"><i class="fa fa-tag"></i> <span data-i18n="easye4.label.alias"></span></label>
+        <input type="text" id="node-input-operandAlias" data-i18n="[placeholder]easye4.placeholder.alias" />
+    </div>
+    <input type="hidden" id="node-input-operand" />
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-onlyChange" style="display:inline-block; width:auto; vertical-align:top;" />
+        <label for="node-input-onlyChange" style="width:auto"> <span data-i18n="easye4.label.onlyChange"></span></label>
+    </div>
+    <div class="form-row e4-diag-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-showDiag" style="display:inline-block; width:auto; vertical-align:top;" />
+        <label for="node-input-showDiag" style="width:auto"> <span data-i18n="easye4.label.showDiag"></span></label>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name" />
+    </div>
+    <div class="form-tips" data-i18n="[html]easye4.tips.in"></div>
+</script>
+
+
+<!-- ===================== easyE4 schreiben ===================== -->
+<script type="text/javascript">
+    (function () {
+        RED.nodes.registerType("easye4-out", {
+            category: "easyE4",
+            color: "#8fc1e3",
+            align: "right",
+            defaults: {
+                name: { value: "" },
+                device: { type: "easye4-device", required: true },
+                operandType: { value: "msg" },
+                operandIndex: { value: 1, validate: easyE4Editor.indexValidator(true) },
+                operandAlias: { value: "", validate: easyE4Editor.aliasValidator },
+                operand: { value: "" },
+                boolAsNumber: { value: true },
+            },
+            inputs: 1,
+            outputs: 0,
+            icon: "font-awesome/fa-sign-out",
+            label: function () {
+                return this.name || this._("easye4.out.label") + ": " + easyE4Editor.operandText(this, this._("easye4.label.operandFromMsg"));
+            },
+            paletteLabel: function () { return this._("easye4.out.paletteLabel"); },
+            inputLabels: function () { return this._("easye4.out.input"); },
+            oneditprepare: function () { easyE4Editor.prepareOperand(this, true); },
+            oneditsave: function () { easyE4Editor.saveOperand(); },
+        });
+    })();
+</script>
+
+<script type="text/html" data-template-name="easye4-out">
+    <div class="form-row">
+        <label for="node-input-device"><i class="fa fa-microchip"></i> <span data-i18n="easye4.label.device"></span></label>
+        <input type="text" id="node-input-device" />
+    </div>
+    <div class="form-row">
+        <label for="node-input-operandType"><i class="fa fa-crosshairs"></i> <span data-i18n="easye4.label.operand"></span></label>
+        <select id="node-input-operandType" style="width:60%">
+            <option value="msg" data-i18n="easye4.op.msg"></option>
+            <option value="M" data-i18n="easye4.op.M"></option>
+            <option value="MB" data-i18n="easye4.op.MB"></option>
+            <option value="MW" data-i18n="easye4.op.MW"></option>
+            <option value="MD" data-i18n="easye4.op.MD"></option>
+            <option value="N" data-i18n="easye4.op.N"></option>
+            <option value="NB" data-i18n="easye4.op.NB"></option>
+            <option value="NW" data-i18n="easye4.op.NW"></option>
+            <option value="ND" data-i18n="easye4.op.ND"></option>
+            <option value="I" data-i18n="easye4.op.Iw"></option>
+            <option value="IA" data-i18n="easye4.op.IAw"></option>
+            <option value="ID" data-i18n="easye4.op.IDw"></option>
+            <option value="alias" data-i18n="easye4.op.alias"></option>
+        </select>
+    </div>
+    <div class="form-row e4-index-row">
+        <label for="node-input-operandIndex"><i class="fa fa-hashtag"></i> <span data-i18n="easye4.label.index"></span></label>
+        <input type="number" id="node-input-operandIndex" min="1" step="1" style="width:90px" />
+        <span class="e4-hint" style="margin-left:8px; color:#888"></span>
+    </div>
+    <div class="form-row e4-alias-row">
+        <label for="node-input-operandAlias"><i class="fa fa-tag"></i> <span data-i18n="easye4.label.alias"></span></label>
+        <input type="text" id="node-input-operandAlias" data-i18n="[placeholder]easye4.placeholder.alias" />
+    </div>
+    <input type="hidden" id="node-input-operand" />
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-boolAsNumber" style="display:inline-block; width:auto; vertical-align:top;" />
+        <label for="node-input-boolAsNumber" style="width:auto"> <span data-i18n="easye4.label.boolAsNumber"></span></label>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name" />
+    </div>
+    <div class="form-tips" data-i18n="[html]easye4.tips.out"></div>
+</script>
+
+
+<!-- ===================== easyE4 aktion ===================== -->
+<script type="text/javascript">
+    (function () {
+        var ACTIONS = ["msg", "start", "stop", "getFB", "setFB", "saveFB", "loadProject", "updateFirmware"];
+        RED.nodes.registerType("easye4-action", {
+            category: "easyE4",
+            color: "#8fc1e3",
+            defaults: {
+                name: { value: "" },
+                device: { type: "easye4-device", required: true },
+                action: { value: "msg" },
+                fbtype: { value: "WT" },
+                index: {
+                    value: "1",
+                    validate: function (v) {
+                        var a = $("#node-input-action").length ? $("#node-input-action").val() : this.action;
+                        if (a !== "getFB" && a !== "setFB") return true;
+                        return /^\d+$/.test(String(v === undefined || v === null ? "" : v).trim());
+                    },
+                },
+                allMessages: { value: false },
+            },
+            inputs: 1,
+            outputs: 1,
+            icon: "font-awesome/fa-bolt",
+            label: function () {
+                var l = ACTIONS.indexOf(this.action) >= 0 ? this._("easye4.action.label." + this.action) : this.action;
+                if (this.action === "getFB" || this.action === "setFB") l += " " + (this.fbtype || "") + (this.index || "");
+                return this.name || "easyE4: " + l;
+            },
+            paletteLabel: function () { return this._("easye4.action.paletteLabel"); },
+            inputLabels: function () { return this._("easye4.action.input"); },
+            outputLabels: function () { return this._("easye4.action.output"); },
+            oneditprepare: function () {
+                var node = this;
+                function update() {
+                    var a = $("#node-input-action").val();
+                    $(".e4-fb-row").toggle(a === "getFB" || a === "setFB");
+                    $("#e4-action-tip").html(ACTIONS.indexOf(a) >= 0 ? node._("easye4.action.tip." + a) : "");
+                    $("#node-input-index").trigger("validate");
+                }
+                $("#node-input-action").on("change", update);
+                update();
+            },
+        });
+    })();
+</script>
+
+<script type="text/html" data-template-name="easye4-action">
+    <div class="form-row">
+        <label for="node-input-device"><i class="fa fa-microchip"></i> <span data-i18n="easye4.label.device"></span></label>
+        <input type="text" id="node-input-device" />
+    </div>
+    <div class="form-row">
+        <label for="node-input-action"><i class="fa fa-bolt"></i> <span data-i18n="easye4.label.action"></span></label>
+        <select id="node-input-action">
+            <option value="start" data-i18n="easye4.action.opt.start"></option>
+            <option value="stop" data-i18n="easye4.action.opt.stop"></option>
+            <option value="getFB" data-i18n="easye4.action.opt.getFB"></option>
+            <option value="setFB" data-i18n="easye4.action.opt.setFB"></option>
+            <option value="saveFB" data-i18n="easye4.action.opt.saveFB"></option>
+            <option value="loadProject" data-i18n="easye4.action.opt.loadProject"></option>
+            <option value="updateFirmware" data-i18n="easye4.action.opt.updateFirmware"></option>
+            <option value="msg" data-i18n="easye4.action.opt.msg"></option>
+        </select>
+    </div>
+    <div class="form-row e4-fb-row">
+        <label for="node-input-fbtype"><i class="fa fa-cube"></i> <span data-i18n="easye4.label.fbtype"></span></label>
+        <input type="text" id="node-input-fbtype" placeholder="WT" style="width:70px" />
+        <span style="margin-left:8px; color:#888" data-i18n="easye4.label.fbHint"></span>
+    </div>
+    <div class="form-row e4-fb-row">
+        <label for="node-input-index"><i class="fa fa-hashtag"></i> <span data-i18n="easye4.label.index"></span></label>
+        <input type="number" id="node-input-index" min="0" step="1" style="width:90px" />
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-allMessages" style="display:inline-block; width:auto; vertical-align:top;" />
+        <label for="node-input-allMessages" style="width:auto"> <span data-i18n="easye4.label.allMessages"></span></label>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name" />
+    </div>
+    <div class="form-tips" id="e4-action-tip"></div>
+    <div class="form-tips" style="margin-top:6px" data-i18n="[html]easye4.tips.action"></div>
+</script>
+

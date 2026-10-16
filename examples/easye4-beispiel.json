@@ -1,0 +1,454 @@
+[
+  {
+    "id": "e4tab",
+    "type": "tab",
+    "label": "easyE4 Beispiel",
+    "disabled": false,
+    "info": "Broker (Stift-Symbol) an die eigene Umgebung anpassen; Basis-Topic der Steuerung muss zu den Topics in easySoft 8 passen (Tabelle im Dialog)."
+  },
+  {
+    "id": "e4broker",
+    "type": "mqtt-broker",
+    "name": "MQTT-Broker",
+    "broker": "localhost",
+    "port": "1883",
+    "clientid": "",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": "",
+    "birthMsg": {},
+    "closeTopic": "",
+    "closeQos": "0",
+    "closePayload": "",
+    "closeMsg": {},
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": "",
+    "willMsg": {},
+    "userProps": "",
+    "sessionExpiry": ""
+  },
+  {
+    "id": "e4dev",
+    "type": "easye4-device",
+    "name": "easye4",
+    "broker": "e4broker",
+    "qos": "0",
+    "topicMode": "auto",
+    "baseTopic": "easye4/1"
+  },
+  {
+    "id": "e4in1",
+    "type": "easye4-in",
+    "z": "e4tab",
+    "name": "",
+    "device": "e4dev",
+    "onlyChange": false,
+    "x": 150,
+    "y": 60,
+    "wires": [
+      [
+        "e4dbg1"
+      ]
+    ],
+    "operandType": "M",
+    "operandIndex": "1",
+    "operandAlias": "",
+    "operand": "M1"
+  },
+  {
+    "id": "e4in2",
+    "type": "easye4-in",
+    "z": "e4tab",
+    "name": "",
+    "device": "e4dev",
+    "onlyChange": false,
+    "x": 170,
+    "y": 110,
+    "wires": [
+      [
+        "e4dbg2"
+      ]
+    ],
+    "operandType": "all",
+    "operandAlias": "",
+    "operand": ""
+  },
+  {
+    "id": "e4dbg1",
+    "type": "debug",
+    "z": "e4tab",
+    "name": "M1",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 450,
+    "y": 60,
+    "wires": []
+  },
+  {
+    "id": "e4dbg2",
+    "type": "debug",
+    "z": "e4tab",
+    "name": "Alle Operanden",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 480,
+    "y": 110,
+    "wires": []
+  },
+  {
+    "id": "e4j1",
+    "type": "inject",
+    "z": "e4tab",
+    "name": "M5 = true",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "true",
+    "payloadType": "bool",
+    "x": 140,
+    "y": 190,
+    "wires": [
+      [
+        "e4out1"
+      ]
+    ]
+  },
+  {
+    "id": "e4j2",
+    "type": "inject",
+    "z": "e4tab",
+    "name": "M5 = false",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "false",
+    "payloadType": "bool",
+    "x": 140,
+    "y": 240,
+    "wires": [
+      [
+        "e4out1"
+      ]
+    ]
+  },
+  {
+    "id": "e4j3",
+    "type": "inject",
+    "z": "e4tab",
+    "name": "MW3 = 42",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "42",
+    "payloadType": "num",
+    "x": 140,
+    "y": 290,
+    "wires": [
+      [
+        "e4out2"
+      ]
+    ]
+  },
+  {
+    "id": "e4out1",
+    "type": "easye4-out",
+    "z": "e4tab",
+    "name": "",
+    "device": "e4dev",
+    "boolAsNumber": true,
+    "x": 420,
+    "y": 215,
+    "wires": [],
+    "operandType": "M",
+    "operandIndex": "5",
+    "operandAlias": "",
+    "operand": "M5"
+  },
+  {
+    "id": "e4out2",
+    "type": "easye4-out",
+    "z": "e4tab",
+    "name": "",
+    "device": "e4dev",
+    "boolAsNumber": true,
+    "x": 420,
+    "y": 290,
+    "wires": [],
+    "operandType": "MW",
+    "operandIndex": "3",
+    "operandAlias": "",
+    "operand": "MW3"
+  },
+  {
+    "id": "e4a1",
+    "type": "inject",
+    "z": "e4tab",
+    "name": "RUN",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 130,
+    "y": 370,
+    "wires": [
+      [
+        "e4act1"
+      ]
+    ]
+  },
+  {
+    "id": "e4a2",
+    "type": "inject",
+    "z": "e4tab",
+    "name": "STOP",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 130,
+    "y": 420,
+    "wires": [
+      [
+        "e4act2"
+      ]
+    ]
+  },
+  {
+    "id": "e4a3",
+    "type": "inject",
+    "z": "e4tab",
+    "name": "FB WT1 lesen",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 150,
+    "y": 470,
+    "wires": [
+      [
+        "e4act3"
+      ]
+    ]
+  },
+  {
+    "id": "e4a4",
+    "type": "inject",
+    "z": "e4tab",
+    "name": "FB WT1 Kanal A = 10:33",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "{\"A\":{\"h\":10,\"min\":33}}",
+    "payloadType": "json",
+    "x": 190,
+    "y": 520,
+    "wires": [
+      [
+        "e4act4"
+      ]
+    ]
+  },
+  {
+    "id": "e4a5",
+    "type": "inject",
+    "z": "e4tab",
+    "name": "FB dauerhaft speichern",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 180,
+    "y": 570,
+    "wires": [
+      [
+        "e4act5"
+      ]
+    ]
+  },
+  {
+    "id": "e4act1",
+    "type": "easye4-action",
+    "z": "e4tab",
+    "name": "",
+    "device": "e4dev",
+    "action": "start",
+    "fbtype": "WT",
+    "index": "1",
+    "allMessages": false,
+    "x": 440,
+    "y": 370,
+    "wires": [
+      [
+        "e4dbgA"
+      ]
+    ]
+  },
+  {
+    "id": "e4act2",
+    "type": "easye4-action",
+    "z": "e4tab",
+    "name": "",
+    "device": "e4dev",
+    "action": "stop",
+    "fbtype": "WT",
+    "index": "1",
+    "allMessages": false,
+    "x": 440,
+    "y": 420,
+    "wires": [
+      [
+        "e4dbgA"
+      ]
+    ]
+  },
+  {
+    "id": "e4act3",
+    "type": "easye4-action",
+    "z": "e4tab",
+    "name": "",
+    "device": "e4dev",
+    "action": "getFB",
+    "fbtype": "WT",
+    "index": "1",
+    "allMessages": false,
+    "x": 440,
+    "y": 470,
+    "wires": [
+      [
+        "e4dbgA"
+      ]
+    ]
+  },
+  {
+    "id": "e4act4",
+    "type": "easye4-action",
+    "z": "e4tab",
+    "name": "",
+    "device": "e4dev",
+    "action": "setFB",
+    "fbtype": "WT",
+    "index": "1",
+    "allMessages": false,
+    "x": 440,
+    "y": 520,
+    "wires": [
+      [
+        "e4dbgA"
+      ]
+    ]
+  },
+  {
+    "id": "e4act5",
+    "type": "easye4-action",
+    "z": "e4tab",
+    "name": "",
+    "device": "e4dev",
+    "action": "saveFB",
+    "fbtype": "WT",
+    "index": "1",
+    "allMessages": false,
+    "x": 440,
+    "y": 570,
+    "wires": [
+      [
+        "e4dbgA"
+      ]
+    ]
+  },
+  {
+    "id": "e4dbgA",
+    "type": "debug",
+    "z": "e4tab",
+    "name": "Antworten",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 700,
+    "y": 470,
+    "wires": []
+  }
+]

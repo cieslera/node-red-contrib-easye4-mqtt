@@ -1,0 +1,151 @@
+{
+    "easye4": {
+        "status": {
+            "connecting": "connecting...",
+            "offline": "easyE4 offline",
+            "online": "easyE4 online",
+            "connected": "connected",
+            "unknown": "broker ok, device unknown",
+            "unknownAction": "unknown action"
+        },
+        "errors": {
+            "outputNotWritable": "Outputs (__name__) cannot be written via MQTT",
+            "reserved": "__name__ is reserved and cannot be written via MQTT",
+            "invalidValue": "Invalid value for __name__: expected a number or true/false",
+            "integer": "__name__ expects an integer",
+            "bit": "__name__ is a bit operand: only 0/1 allowed",
+            "payloadMissing": "msg.payload is missing",
+            "noOperand": "No operand: set it in the dialog, in msg.topic or send msg.payload = {Operand: value}",
+            "noOperands": "No operands given",
+            "fbTypeMissing": "Function block type is missing (e.g. \"WT\")",
+            "fbIndexInvalid": "Function block index is missing or invalid",
+            "urlMissing": "URL missing: msg.payload = http(s) URL or {url: ...}",
+            "requestMissing": "Request missing (e.g. msg.payload = {A: {h: 10, min: 33}})",
+            "aliasMissing": "Alias is missing",
+            "unknownOperandType": "Unknown operand type '__type__'",
+            "indexInvalid": "Index is missing or invalid",
+            "noDevice": "No easyE4 device configured",
+            "noBroker": "No MQTT broker configured",
+            "baseTopicMissing": "Base topic is missing",
+            "invalidTopic": "Invalid topic (__key__): max. 511 characters, no wildcards + #",
+            "missingDataIn": "The device has no topic for receiving (Publish topic)",
+            "missingDataOut": "The device has no topic for sending (Subscribe topic)",
+            "missingActionOut": "The device has no topic for actions (Actions subscribe topic)",
+            "notConnected": "Not connected to the MQTT broker",
+            "deviceOffline": "easyE4 is offline: the message will probably be lost",
+            "unknownAction": "Unknown action '__action__'",
+            "unknownActionAllowed": "Unknown action '__action__' (allowed: __list__)",
+            "noAction": "No action: select one in the dialog or set msg.action (__list__)"
+        },
+        "label": {
+            "device": "Controller",
+            "broker": "MQTT broker",
+            "topics": "Topics",
+            "baseTopic": "Base topic",
+            "dataIn": "Receive from",
+            "dataOut": "Send to",
+            "actionOut": "Send action to",
+            "actionIn": "Response from",
+            "qos": "QoS",
+            "qosHint": "0 recommended",
+            "operand": "Operand",
+            "index": "Index",
+            "alias": "Alias",
+            "onlyChange": "Only output on change",
+            "showDiag": "Include diagnostic operands (ID1–ID25)",
+            "boolAsNumber": "Send true/false as 1/0",
+            "action": "Action",
+            "fbtype": "Block",
+            "fbHint": "currently only WT can be changed",
+            "allMessages": "Also output other messages from the easyE4",
+            "empty": "(empty)",
+            "writableFrom": "writable from __min__",
+            "allOperands": "all operands",
+            "operandFromMsg": "operand from msg"
+        },
+        "topicMode": {
+            "auto": "Simple: one base topic",
+            "manual": "Individual: enter four topics yourself"
+        },
+        "placeholder": {
+            "dataIn": "= Publish topic of the easyE4",
+            "dataOut": "= Subscribe topic of the easyE4",
+            "actionOut": "= Actions subscribe topic",
+            "actionIn": "= Actions publish topic",
+            "alias": "e.g. Pump_On"
+        },
+        "tips": {
+            "summary": "<b>Enter in easySoft 8</b> (MQTT broker access, step 3):",
+            "qos": "The easyE4 only processes write requests reliably with QoS 0 (firmware 2.46).",
+            "in": "The easyE4 only sends operands that are listed in easySoft 8 on the <i>Cyclic data</i> tab, and only in RUN mode.",
+            "out": "The operand must be marked as <i>writable</i> in easySoft 8 (Cyclic data). Outputs (Q, QA) cannot be written via MQTT.",
+            "action": "Each action must be enabled in easySoft 8 on the <i>MQTT settings</i> tab."
+        },
+        "op": {
+            "all": "All operands (as object)",
+            "msg": "From the message (msg.topic / msg.payload)",
+            "M": "M – Marker (bit)",
+            "MB": "MB – Marker (byte)",
+            "MW": "MW – Marker (word)",
+            "MD": "MD – Marker (double word)",
+            "N": "N – Network marker (bit)",
+            "NB": "NB – Network (byte)",
+            "NW": "NW – Network (word)",
+            "ND": "ND – Network (double word)",
+            "I": "I – Input (bit)",
+            "IA": "IA – Analog input",
+            "ID": "ID – Input (double word)",
+            "Q": "Q – Output (bit)",
+            "QA": "QA – Analog output",
+            "Iw": "I – Input (bit, from I17)",
+            "IAw": "IA – Analog input (from IA5)",
+            "IDw": "ID – Input (double word, from ID26)",
+            "alias": "Alias (name from easySoft)"
+        },
+        "in": {
+            "paletteLabel": "easyE4 read",
+            "label": "easyE4 read",
+            "output": "Value"
+        },
+        "out": {
+            "paletteLabel": "easyE4 write",
+            "label": "easyE4 write",
+            "input": "Value"
+        },
+        "action": {
+            "paletteLabel": "easyE4 action",
+            "input": "Trigger",
+            "output": "Response",
+            "opt": {
+                "start": "Start RUN",
+                "stop": "STOP",
+                "getFB": "Read function block",
+                "setFB": "Change function block",
+                "saveFB": "Save FB changes permanently",
+                "loadProject": "Load program",
+                "updateFirmware": "Load firmware",
+                "msg": "From the message (msg.action)"
+            },
+            "label": {
+                "msg": "action from msg.action",
+                "start": "RUN",
+                "stop": "STOP",
+                "getFB": "read function block",
+                "setFB": "change function block",
+                "saveFB": "save FB changes",
+                "loadProject": "load program",
+                "updateFirmware": "load firmware"
+            },
+            "tip": {
+                "msg": "The action is taken from <code>msg.action</code> (start, stop, getFB, setFB, saveFB, loadProject, updateFirmware).",
+                "start": "Starts the program (RUN). Requires a program stored on the device.",
+                "stop": "Stops the program (STOP).",
+                "getFB": "Reads the settings of the block. The block must be enabled for access in easySoft 8.",
+                "setFB": "New values in <code>msg.payload</code>, e.g. <code>{A: {h: 10, min: 33}}</code>. Only channels with chg:1; valid until the next restart (make permanent with <i>Save FB changes</i>).",
+                "saveFB": "Permanently saves previously changed block parameters.",
+                "loadProject": "The program file URL (http/https) is in <code>msg.payload</code>.",
+                "updateFirmware": "The firmware URL (http/https) is in <code>msg.payload</code>."
+            }
+        }
+    }
+}

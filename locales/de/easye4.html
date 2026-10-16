@@ -1,0 +1,115 @@
+<script type="text/html" data-help-name="easye4-device">
+    <p>Die easyE4-Steuerung mit allem, was Node-RED zur Verbindung braucht: MQTT-Broker und die vier Topics.
+        Die Knoten <i>easyE4 lesen</i>, <i>easyE4 schreiben</i> und <i>easyE4 aktion</i> verweisen auf diese Steuerung.
+        Pro easyE4 genügt ein Eintrag.</p>
+    <h3>Einfach: ein Basis-Topic</h3>
+    <p>Du gibst nur ein Basis-Topic an, z. B. <code>easye4/1</code>. Daraus werden die vier Topics gebildet.
+        Die Tabelle im Dialog zeigt, was du in easySoft 8 eintragen musst:</p>
+    <ul>
+        <li><b>Publish topic</b> = <code>&lt;Basis&gt;/data</code> (die easyE4 sendet hier ihre Operanden)</li>
+        <li><b>Subscribe topic</b> = <code>&lt;Basis&gt;/set</code> (hier empfängt sie Werte)</li>
+        <li><b>Actions publish topic</b> = <code>&lt;Basis&gt;/actions/response</code></li>
+        <li><b>Actions subscribe topic</b> = <code>&lt;Basis&gt;/actions/request</code></li>
+    </ul>
+    <p>Für mehrere Steuerungen verwendest du verschiedene Basis-Topics (<code>easye4/1</code>, <code>easye4/2</code> ...).</p>
+    <h3>Einzeln</h3>
+    <p>Für eigene Topic-Namen. Erlaubt sind max. 511 Zeichen, keine Wildcards (+ #). Nicht benötigte Topics dürfen leer bleiben.</p>
+    <h3>MQTT-Broker</h3>
+    <p>Den Broker legst du über das Stift-Symbol an (Server, Port, ggf. TLS und Zugangsdaten); das ist der
+        Standard-Broker von Node-RED. Bei Mosquitto auf demselben Gerät genügt <code>localhost</code>, Port <code>1883</code>.</p>
+    <h3>Statusanzeige unter den Knoten</h3>
+    <p>Die Anzeige berücksichtigt, ob die easyE4 selbst am Broker hängt. Sie wertet dazu die Meldung
+        <code>connected</code> aus (die easyE4 sendet beim Verbinden <code>"true"</code>, der Broker beim
+        Verbindungsverlust ihre Letzte-Wille-Nachricht <code>"false"</code>).</p>
+    <ul>
+        <li><b>grün:</b> easyE4 online (bzw. der Wert bei <i>easyE4 lesen</i> mit festem Operanden)</li>
+        <li><b>rot, "easyE4 offline":</b> die easyE4 hat die Verbindung verloren. Nach dem Ausschalten dauert das bis
+            zu 90 s (1,5 &times; Keep-Alive von 60 s).</li>
+        <li><b>grau, "Gerät unbekannt":</b> Node-RED ist am Broker, aber von der easyE4 kam noch keine Meldung
+            (normal nach einem Neustart; ändert sich mit der nächsten Meldung).</li>
+    </ul>
+    <h3>Haftungsausschluss</h3>
+    <p>Inoffizielles Projekt, nicht von Eaton. Die Benutzung erfolgt auf eigene Gefahr. Es wird keinerlei Haftung
+        übernommen, insbesondere nicht für Schäden an Maschinen, Anlagen oder Personen, die durch das Schreiben von
+        Operanden, RUN/STOP oder Programm- und Firmware-Updates entstehen. Details: Datei <code>LICENSE</code> (MIT).</p>
+</script>
+
+<script type="text/html" data-help-name="easye4-in">
+    <p>Liest einen Operanden der easyE4. Der Knoten gibt jedes Mal eine Nachricht aus, wenn die easyE4 den Wert meldet.</p>
+    <h3>Einstellungen</h3>
+    <dl class="message-properties">
+        <dt>Operand + Index</dt>
+        <dd>Operandentyp wählen (z. B. <code>MW – Merker Wort</code>) und die Nummer eintragen: Typ <code>MW</code>
+            und Index <code>3</code> ergibt <code>MW3</code>. Mit <i>Alias</i> verwendest du einen in easySoft 8
+            vergebenen Namen. <i>Alle Operanden</i> gibt alles, was die easyE4 meldet, als Objekt aus.</dd>
+        <dt>Diagnose-Operanden</dt>
+        <dd>Die easyE4 sendet die Diagnose-Operanden ID1&ndash;ID25 ständig mit. Bei <i>Alle Operanden</i> werden sie nur
+            ausgegeben, wenn der Haken gesetzt ist. Wählst du ID als Operandentyp, wird der Wert immer ausgegeben.</dd>
+        <dt>Nur bei Änderung</dt>
+        <dd>Gibt nur aus, wenn sich der Wert gegenüber dem zuletzt ausgegebenen geändert hat
+            (der erste Wert wird immer ausgegeben).</dd>
+    </dl>
+    <h3>Ausgang</h3>
+    <dl class="message-properties">
+        <dt>payload</dt><dd>Der Wert des Operanden (bei <i>Alle Operanden</i> ein Objekt <code>{M1: 1, MW3: 42}</code>).</dd>
+        <dt>topic</dt><dd>Name des Operanden, wie ihn die easyE4 meldet (bei <i>Alle</i> das MQTT-Topic).</dd>
+    </dl>
+    <p>Der aktuelle Wert wird unter dem Knoten angezeigt.</p>
+</script>
+
+<script type="text/html" data-help-name="easye4-out">
+    <p>Setzt einen Operanden der easyE4. Der Wert kommt aus <code>msg.payload</code>.</p>
+    <h3>Einstellungen</h3>
+    <p>Operandentyp wählen und Nummer eintragen: Typ <code>M</code> und Index <code>5</code> ergibt <code>M5</code>.
+        Mit <i>Alias</i> verwendest du einen Namen aus easySoft 8. Bei <i>Aus der Nachricht</i> bestimmt die Nachricht den Operanden.</p>
+    <h3>Eingang</h3>
+    <dl class="message-properties">
+        <dt>payload <span class="property-type">number | boolean | string</span></dt>
+        <dd>Der Wert. Zahlen als Text (<code>"42"</code>) und <code>true</code>/<code>false</code> werden umgewandelt.</dd>
+        <dt class="optional">topic <span class="property-type">string</span></dt>
+        <dd>Operandenname, wenn im Dialog <i>Aus der Nachricht</i> gewählt ist.</dd>
+    </dl>
+    <p>Bei <i>Aus der Nachricht</i> kann <code>msg.payload</code> auch ein Objekt mit mehreren Operanden sein,
+        z. B. <code>{"M5": 1, "MW3": 42}</code>.</p>
+    <h3>Hinweise</h3>
+    <ul>
+        <li>Nicht beschreibbar sind Ausgänge (Q, QA) und die reservierten Operanden I1&ndash;I16, IA1&ndash;IA4 und
+            ID1&ndash;ID25; deshalb beginnt der Index bei I, IA und ID erst bei 17, 5 und 26.
+            Werte, die nicht zum Typ passen (z. B. 2 bei einem Merker-Bit), werden abgelehnt.</li>
+        <li>Die easyE4 verarbeitet Schreibzugriffe nur, wenn sie läuft und mit dem Broker verbunden ist.</li>
+    </ul>
+</script>
+
+<script type="text/html" data-help-name="easye4-action">
+    <p>Löst eine Aktion auf der easyE4 aus und gibt die Antwort aus. Jede Nachricht am Eingang sendet die Aktion einmal.
+        Jede Aktion muss in easySoft 8 im Register <i>MQTT Einstellungen</i> ausdrücklich freigegeben sein.</p>
+    <h3>Aktionen</h3>
+    <table>
+        <tr><th>Aktion</th><th><code>msg.payload</code></th><th>Wirkung</th></tr>
+        <tr><td>RUN / STOP</td><td>&ndash;</td><td>Betriebsart wechseln (RUN nur mit hinterlegtem Programm)</td></tr>
+        <tr><td>Funktionsbaustein lesen</td><td>&ndash;</td><td>Einstellung des Bausteins (Typ und Index aus dem Dialog)</td></tr>
+        <tr><td>Funktionsbaustein ändern</td><td><code>{A: {h: 10, min: 33}}</code></td>
+            <td>Nur Kanäle mit <code>chg: 1</code>; gilt bis zum Neustart</td></tr>
+        <tr><td>FB-Änderungen speichern</td><td>&ndash;</td><td>Geänderte Parameter dauerhaft speichern</td></tr>
+        <tr><td>Programm / Firmware laden</td><td><code>"http://.../datei"</code></td><td>Update über URL</td></tr>
+    </table>
+    <p>Wählst du <i>Aus der Nachricht</i>, bestimmt <code>msg.action</code> die Aktion
+        (<code>start, stop, getFB, setFB, saveFB, loadProject, updateFirmware</code>).
+        Baustein-Typ und Index können dann auch in <code>msg.payload</code> mitgegeben werden:
+        <code>{fbtype: "WT", index: 1, request: {A: {h: 10}}}</code>.
+        Optional gibt <code>msg.id</code> die Aktions-ID vor, sonst wird sie automatisch vergeben.</p>
+    <h3>Ausgang</h3>
+    <p>Die Antwort der easyE4 auf diese Anfrage. Die ursprüngliche Nachricht bleibt erhalten, ergänzt um:</p>
+    <dl class="message-properties">
+        <dt>success</dt><dd><code>true</code> bei <code>SUCCEEDED</code>, sonst <code>false</code>.</dd>
+        <dt>status / operation / id</dt><dd>Statusangabe, ausgeführte Operation und Aktions-ID.</dd>
+        <dt>errorMsg</dt><dd>Fehlertext bei <code>FAILED</code>, z. B. "Invalid FB index.".</dd>
+        <dt>response</dt><dd>Nutzdaten, z. B. die Konfiguration beim Lesen eines Funktionsbausteins.</dd>
+        <dt>payload</dt><dd>Die komplette Antwort der easyE4.</dd>
+    </dl>
+    <p>Manche Aktionen beantwortet die easyE4 zuerst mit einer Zwischenmeldung (<code>status: "IN_PROGRESS"</code>)
+        und danach mit dem Ergebnis. Der Knoten gibt nur das Ergebnis aus.</p>
+    <p>Befehle werden nie mit Retain gesendet. Mit der Option <i>Auch andere Meldungen</i> werden zusätzlich
+        Zwischenmeldungen (<code>msg.inProgress = true</code>) und Statusmeldungen der easyE4 ausgegeben, die nicht zu
+        einer Anfrage dieses Knotens gehören.</p>
+</script>
