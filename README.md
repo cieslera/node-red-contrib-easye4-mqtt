@@ -104,7 +104,7 @@ to type + index or shown as *Individual* when the dialog is opened.
 
 ### License
 
-MIT – see [LICENSE](LICENSE). Use at your own risk, no liability.
+MIT – see [LICENSE](LICENSE). Use at your own risk, no liability – see the [safety and liability notice](HINWEIS.md).
 
 ### Bugs and questions
 
@@ -200,7 +200,7 @@ des Dialogs automatisch in Typ + Index umgesetzt bzw. als *Einzeln* angezeigt.
 
 ### Lizenz
 
-MIT – siehe [LICENSE](LICENSE). Benutzung auf eigene Gefahr, keinerlei Haftung.
+MIT – siehe [LICENSE](LICENSE). Benutzung auf eigene Gefahr, keinerlei Haftung – siehe [Sicherheits- und Haftungshinweis](HINWEIS.md).
 
 ### Fehler und Fragen
 
