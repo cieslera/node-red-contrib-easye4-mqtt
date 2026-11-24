@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.1.5
+
+- README: disclaimer moved from the top to the end of the page (content unchanged, still linked at the top). No functional changes.
+  / README: Haftungsausschluss vom Seitenanfang ans Ende verschoben (Inhalt unverändert, oben weiterhin verlinkt). Keine Änderung an der Funktion.
+
 ## 4.1.4
 
 - Added repository, bug tracker and homepage links (GitHub). No functional changes.

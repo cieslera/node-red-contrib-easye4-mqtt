@@ -1,21 +1,9 @@
 # node-red-contrib-easye4-mqtt
 
-**[English](#english) | [Deutsch](#deutsch)**
+**[English](#english) | [Deutsch](#deutsch) | [Disclaimer / Haftungsausschluss](#disclaimer--haftungsausschluss)**
 
 Node-RED nodes for the **Eaton easyE4** (firmware 2.40 or later) via its universal MQTT interface.
 Node-RED-Knoten für die **Eaton easyE4** (Firmware ab 2.40) über die universelle MQTT-Anbindung.
-
-> **⚠ Use at your own risk / Benutzung auf eigene Gefahr**
->
-> This software controls real machines (writing operands, RUN/STOP, program and firmware updates).
-> It is provided "as is" under the MIT license, **without any warranty and without any liability** for damage
-> to persons, machines, installations or data. Never let safety functions depend on it.
-> Unofficial project, not affiliated with or endorsed by Eaton.
->
-> Diese Software steuert reale Maschinen (Operanden schreiben, RUN/STOP, Programm- und Firmware-Updates).
-> Sie wird unter der MIT-Lizenz „wie besehen“ bereitgestellt, **ohne Gewährleistung und ohne jegliche Haftung**
-> für Schäden an Personen, Maschinen, Anlagen oder Daten. Sicherheitsfunktionen dürfen nie davon abhängen.
-> Inoffizielles Projekt, nicht von Eaton.
 
 ---
 
@@ -104,7 +92,7 @@ to type + index or shown as *Individual* when the dialog is opened.
 
 ### License
 
-MIT – see [LICENSE](LICENSE). Use at your own risk, no liability – see the [safety and liability notice](HINWEIS.md).
+MIT – see [LICENSE](LICENSE). Use at your own risk, no liability.
 
 ### Bugs and questions
 
@@ -200,8 +188,22 @@ des Dialogs automatisch in Typ + Index umgesetzt bzw. als *Einzeln* angezeigt.
 
 ### Lizenz
 
-MIT – siehe [LICENSE](LICENSE). Benutzung auf eigene Gefahr, keinerlei Haftung – siehe [Sicherheits- und Haftungshinweis](HINWEIS.md).
+MIT – siehe [LICENSE](LICENSE). Benutzung auf eigene Gefahr, keinerlei Haftung.
 
 ### Fehler und Fragen
 
 Probleme bitte unter [GitHub Issues](https://github.com/cieslera/node-red-contrib-easye4-mqtt/issues) melden.
+
+---
+
+## Disclaimer / Haftungsausschluss
+
+This software controls real machines (writing operands, RUN/STOP, program and firmware updates).
+It is provided "as is" under the MIT license, **without any warranty and without any liability** for damage
+to persons, machines, installations or data. Never let safety functions depend on it.
+Unofficial project, not affiliated with or endorsed by Eaton.
+
+Diese Software steuert reale Maschinen (Operanden schreiben, RUN/STOP, Programm- und Firmware-Updates).
+Sie wird unter der MIT-Lizenz „wie besehen“ bereitgestellt, **ohne Gewährleistung und ohne jegliche Haftung**
+für Schäden an Personen, Maschinen, Anlagen oder Daten. Sicherheitsfunktionen dürfen nie davon abhängen.
+Inoffizielles Projekt, nicht von Eaton.
